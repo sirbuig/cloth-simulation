@@ -45,12 +45,12 @@ const world = new CANNON.World();
 world.gravity.set(0, -9.82, 0);
 const time_step = 1 / 60;
 
-// const sphere_body = new CANNON.Body({
-//   mass: 1,
-//   position: new CANNON.Vec3(0, -5, 0),
-//   shape: new CANNON.Sphere(radius),
-// });
-// world.addBody(sphere_body);
+const sphere_body = new CANNON.Body({
+  mass: 0,
+  position: new CANNON.Vec3(0, -5, 0),
+  shape: new CANNON.Sphere(radius),
+});
+world.addBody(sphere_body);
 
 function create_cloth(widthSegments, heightSegments) {
   const geometry = new THREE.PlaneGeometry(
@@ -92,6 +92,10 @@ function animate() {
   sphere.rotation.y += 0.003;
 
   world.step(time_step);
+
+  sphere.position.copy(sphere_body.position);
+  sphere.quaternion.copy(sphere_body.quaternion);
+
   cloth.position.copy(cloth_body.position);
   cloth.quaternion.copy(cloth_body.quaternion);
 
