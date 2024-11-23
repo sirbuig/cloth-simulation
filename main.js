@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import * as CANNON from "cannon-es";
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
@@ -40,11 +41,60 @@ const sphere = new THREE.Mesh(geometry, material);
 sphere.position.set(0, -5, 0);
 scene.add(sphere);
 
+const world = new CANNON.World();
+world.gravity.set(0, -9.82, 0);
+const time_step = 1 / 60;
+
+// const sphere_body = new CANNON.Body({
+//   mass: 1,
+//   position: new CANNON.Vec3(0, -5, 0),
+//   shape: new CANNON.Sphere(radius),
+// });
+// world.addBody(sphere_body);
+
+function create_cloth(widthSegments, heightSegments) {
+  const geometry = new THREE.PlaneGeometry(
+    7.5,
+    7.5,
+    widthSegments,
+    heightSegments
+  );
+  const material = new THREE.MeshBasicMaterial({
+    color: 0xffff00,
+    side: THREE.DoubleSide,
+    wireframe: true,
+  });
+  const cloth = new THREE.Mesh(geometry, material);
+  cloth.position.set(0, 5, 0);
+  cloth.rotation.x = -Math.PI / 2;
+  scene.add(cloth);
+
+  const cloth_body = new CANNON.Body({
+    mass: 1,
+    position: new CANNON.Vec3(0, 5, 0),
+    shape: new CANNON.Box(new CANNON.Vec3(3.5, 3.5, 0.1)),
+  });
+
+  const q = new CANNON.Quaternion();
+  q.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+  cloth_body.quaternion.copy(q);
+
+  world.addBody(cloth_body);
+
+  return { cloth, cloth_body };
+}
+
+const { cloth, cloth_body } = create_cloth(2, 2);
+
 camera.position.z = 15;
 
 function animate() {
-  // sphere.rotation.x += 0.003;
   sphere.rotation.y += 0.003;
+
+  world.step(time_step);
+  cloth.position.copy(cloth_body.position);
+  cloth.quaternion.copy(cloth_body.quaternion);
+
   renderer.render(scene, camera);
 }
 renderer.setAnimationLoop(animate);
